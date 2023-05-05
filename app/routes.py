@@ -3,29 +3,25 @@ from app import db
 from app.models.crystal import Crystal
 
 #responsible for validating and returning crystal instance
-def validate_crystal(crystal_id):
+def validate_model(cls, model_id):
     try:
-        crystal_id = int(crystal_id)
+        model_id = int(model_id)
     except:
-        abort(make_response({"message":f"crystal {crystal_id} is invalid type ({type(crystal_id)})"}, 400))
+        abort(make_response({"message":f"{cls.__name__} {model_id} is invalid type ({type(model_id)})"}, 400))
         
-    crystal = Crystal.query.get(crystal_id)
+    model = cls.query.get(model_id)
     
-    if not crystal:
-        abort(make_response({"message": f"crystal {crystal_id} not found"}, 404))
+    if not model:
+        abort(make_response({"message": f"{cls.__name__} {model_id} not found"}, 404))
     
-    return crystal
+    return model
 
 crystal_bp = Blueprint("crystals", __name__, url_prefix="/crystals")
 
 @crystal_bp.route('', methods=["POST"])
-def handle_crystals():
+def create_crystals():
     request_body = request.get_json()
-    new_crystal = Crystal(
-        name = request_body["name"],
-        color = request_body["color"],
-        powers = request_body["powers"]
-    )
+    new_crystal = Crystal.from_dict(request_body)
     
     db.session.add(new_crystal)
     db.session.commit()
